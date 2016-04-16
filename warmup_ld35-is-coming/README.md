@@ -1,5 +1,7 @@
 # LD35 is coming
 
+![a screenshot](/warmup_ld35-is-coming/a-small-screenshot.png?raw=true "a screenshot")
+
 A fast one-night demo (~6h) to get into the mood.
 
 You can play it here:
