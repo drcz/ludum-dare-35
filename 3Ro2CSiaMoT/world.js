@@ -53,7 +53,7 @@ var filter = function(list,f) {
 ///  -- this enables to separate the sound FXs or sth from the mechanics,
 ///  and might be useful when debugging (or may be not).
 
-/// A twist: the world is the surface of torus; therefore we add 2 permieters
+/// A twist: the world is the surface of torus; therefore we add 2 perimeters
 /// this mod thing spoils some dx/dy computations, but WHO CARES?
 
 /// Therefore:
@@ -102,6 +102,7 @@ var find_hero = function(world) {
     return null; /// wtf?
 };
 
+/// todo var find_pipe_ends ??
 
 /// world's "modifiers". ///////////////////////////////////////////////////////
 var insert_thing = function(world, thing) {
@@ -145,7 +146,7 @@ var new_world_order = function(world) {
 
 /// log certain triplets, or whatever...
 var notice = function(world, fact) {
-//    console.log(fact); // dbg !!
+    console.log(fact); // dbg !!
     world.facts.push(fact);
     return(world);
 };
@@ -229,7 +230,6 @@ var c_explode_active = function(world, active,passive) {
     return(world);
 };
 
-
 var c_bump_passive = function(world, active,passive) {
     passive.dx*=-1;
     passive.dy*=-1;
@@ -262,6 +262,7 @@ var c_stop_active = function(world, active,passive) {
     return(world);
 };
 
+/*
 var mk_particle = function(x,y, dx,dy) {
     return({'type':'PARTICLE', 'x':x,'y':y, 'dx':dx,'dy':dy});
 };
@@ -291,6 +292,7 @@ var c_fission_passive = function(world, active,passive) {
     world = notice(world, ['FISSION']); // ?!
     return(world);
 };
+*/
 
 var c_death = function(world, active,passive) {
     /// does death come alone, or with eager reinforcements?
@@ -321,6 +323,13 @@ var c_push = function(world, active,passive) {
     return(world);
 };
 
+var c_fail = function(world, active,passive) {
+    /// only for sfx/msg:
+    world = notice(world, ['FAILED TO PUSH',active.type,passive.type]);
+    return(world);
+};
+
+/*
 var c_set_in_motion = function(world, active,passive) {
     var dx = signum(passive.x - active.x);
     var dy = signum(passive.y - active.y);
@@ -330,12 +339,14 @@ var c_set_in_motion = function(world, active,passive) {
     world = notice(world, ['SETS IN MOTION',active.type,passive.type]);
     return(world);
 };
+*/
 
 var c_pickup = function(world, active,passive) {
     if(active.inventory==undefined) active.inventory=[];
     active.inventory.push(passive); /// TODO sure?
     world = delete_thing(world, passive);
     world = update_thing(world, active);
+    world = notice(world,['PICKUP',active.type,passive.type]);
     return(world);
 };
 
@@ -371,16 +382,26 @@ var c_open = function(world, active,passive) {
 var c_active2square = function(world, active,passive) {
     active.type = 'HERO-SQUARE';
     world = update_thing(world, active);
+    world = notice(world, ["SHIFT TO", active.type, "SQUARE"]);
     return(world);
 };
 var c_active2triangle = function(world, active,passive) {
     active.type = 'HERO-TRIANGLE';
     world = update_thing(world, active);
+    world = notice(world, ["SHIFT TO", active.type, "TRIANGLE"]);
     return(world);
 };
 var c_active2disk = function(world, active,passive) {
     active.type = 'HERO-DISK';
     world = update_thing(world, active);
+    world = notice(world, ["SHIFT TO", active.type, "DISK"]);
+    return(world);
+};
+
+var c_annihilate = function(world, active,passive) {
+    world = c_explode_passive(world, active,passive);
+    world = c_delete_active(world, active,passive);
+    world = notice(world, ["ANNIHILATE",active.type]);
     return(world);
 };
 
@@ -412,7 +433,7 @@ var c_active_teleport = function(world, active, passive) {
 	var end = pipe_ends[0];
 	/// oh, and check if it's open
 	if(!end.open) {
-	    /// TODO special notice [tell the player it's closed or sth]
+	    world = notice(world, ["THIS PIPE IS CLOSED"]); //?
 	    return world;
 	}
 	/// this is tricky, and I've got fever right now :)
@@ -427,12 +448,12 @@ var c_active_teleport = function(world, active, passive) {
 	world = move_thing(world, active, nx,ny);
 	var check = world.things[ai];
 	if(check.x==nx && check.y==ny) {
-	  // TODO notice success  
+	    world = notice(world, ["TELEPORT",active.type,passive.type]); //?
 	} else {
 	    active.x = ox;
 	    active.y = oy;
 	    world = update_thing(world, active);
-	    /// TODO notice blocked
+	    world = notice(world, ["FAILED TO TELEPORT",active.type,passive.type]); //?
 	}
     } else {
 	/// no notice there I guess...
@@ -448,10 +469,10 @@ var c_turncock = function(world, active,passive) {
 			   });
     for(var i=0;i<pipe_ends.length;i++) {
 	var end = pipe_ends[i];
-	end.open = true; ///!end.open;
+	end.open = true; ///!end.open; ?
 	world = update_thing(world, end);
-    }
-    /// TODO notice
+    }    
+    world = notice(world,["TURNCOCK"]);
     return(world);
 };
 
@@ -484,9 +505,13 @@ var collisions = {
     'HERO-TRIANGLE|MACHINE':  compose(c_active2square,c_explode_passive),
     'HERO-DISK|MACHINE':  compose(c_active2triangle,c_explode_passive),
 
-    'SQUARE|HOLE-SQUARE' : compose(c_explode_passive,c_delete_active),
-    'TRIANGLE|HOLE-TRIANGLE' : compose(c_explode_passive,c_delete_active),
-    'DISK|HOLE-DISK' : compose(c_explode_passive,c_delete_active),
+    'HERO-TRIANGLE|SQUARE': c_fail,
+    'HERO-DISK|SQUARE': c_fail,
+    'HERO-DISK|TRIANGLE': c_fail,
+
+    'SQUARE|HOLE-SQUARE' : c_annihilate,
+    'TRIANGLE|HOLE-TRIANGLE' : c_annihilate,
+    'DISK|HOLE-DISK' : c_annihilate,
 
     'HERO-SQUARE|HOLE-DISK': c_active_stepover,
     'HERO-TRIANGLE|HOLE-DISK': c_active_stepover,
@@ -509,6 +534,13 @@ var collisions = {
     'HERO-TRIANGLE|DOOR': c_open,
     'HERO-DISK|DOOR': c_open,
 
+    '*|TURNCOCK-H': c_turncock,
+    '*|TURNCOCK-V': c_turncock,
+
+    '*|PIPE-H': c_active_teleport,
+    '*|PIPE-V': c_active_teleport
+
+    /*
     'SQUARE|PIPE-H': c_active_teleport,
     'TRIANGLE|PIPE-H': c_active_teleport,
     'DISK|PIPE-H': c_active_teleport,
@@ -522,37 +554,14 @@ var collisions = {
     'HERO-SQUARE|PIPE-V': c_active_teleport,
     'HERO-TRIANGLE|PIPE-V': c_active_teleport,
     'HERO-DISK|PIPE-V': c_active_teleport,
-
+    
     'HERO-SQUARE|TURNCOCK-H': c_turncock,
     'HERO-TRIANGLE|TURNCOCK-H': c_turncock,
     'HERO-DISK|TURNCOCK-H': c_turncock,
     'HERO-SQUARE|TURNCOCK-V': c_turncock,
     'HERO-TRIANGLE|TURNCOCK-V': c_turncock,
     'HERO-DISK|TURNCOCK-V': c_turncock
-
-    /*
-    'HERO|KEY': c_pickup,
-    'HERO|DOOR': c_open,
-    'HERO|PARTICLE': compose(c_delete_passive,c_death),
-    'HERO|NIDERITE': c_set_in_motion,
-    'HERO|*': c_nothing, /// ?
-    'ANT|HERO' : compose(c_bump_active,c_death),
-    'ANT|FIRE' : c_explode_active,
-    'ANT|NIDERITE': compose(c_bump_passive,c_explode_active),
-    'NIDERITE|NIDERITE': compose(c_explode_active,c_explode_passive),
-    'NIDERITE|ANT': compose(c_bump_active,c_explode_passive),
-    'NIDERITE|PARTICLE': c_fission_passive,
-    'PARTICLE|NIDERITE': c_fission_active,
-    'PARTICLE|KEY':c_explode_active,
-    'PARTICLE|DOOR':c_explode_active,
-    'PARTICLE|WALL':c_explode_active,
-    'PARTICLE|FIRE':c_delete_active,
-    'PARTICLE|HERO': compose(c_delete_active,c_death),
-    'ANT|*' : c_bump_active,
-    'NIDERITE|*': c_stop_active,
-    'PARTICLE|*': compose(c_delete_active,c_explode_passive),
-    '*|PARTICLE': compose(c_delete_passive,c_explode_active)
-*/
+    */
 };
 
 var collision_for = function(active, passive) {
@@ -575,7 +584,7 @@ var move_thing = function(world, thing,x,y) {
     if(thing==null) return(world); /// defensive...
     var obstacle = find_by_pos(world,x,y);
     if(obstacle == null) {
-	x=mod(x,world['hp']); y=mod(y,world['vp']); /// Torus Topology!
+	x=mod(x,world['hp']); y=mod(y,world['vp']); /// Torus Topology
 	thing.x = x;
 	thing.y = y;
 	world = update_thing(world, thing);
@@ -604,6 +613,7 @@ var step_movable = function(world, thing) {
     return(world);
 };
 
+/*
 var step_gun = function(world, thing) {
     if(true || thing.on) { /// TMP
 	if(--thing.count<=0) {
@@ -619,6 +629,7 @@ var step_gun = function(world, thing) {
     }
     return(world);
 };
+*/
 
 var step_expires = function(world,thing) {
     if(thing.expires--<=0) {

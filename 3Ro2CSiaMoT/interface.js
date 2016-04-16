@@ -22,18 +22,35 @@ var screen_w=608, screen_h=480;
 var kanwa=document.getElementById("ekraniszcze");
 var kontekst=kanwa.getContext("2d");
 
-var load_sound = function(url) {
-    return new Audio(url);
+var load_sound = function(url,max) {
+    var smpls = [];
+    for(var i=0;i<max;i++) {
+	smpls.push(new Audio(url));
+    }
+    return {"samples":smpls,"index":0,"max":max};
 };
 
+
 var Sounds = {
-    'beep' : load_sound('snd/beep.ogg')
-    /// TODO
+ /// 'low-chord-dtn' : load_sound('snd/low-chord-dtn.ogg'),
+    'pipe' : load_sound('snd/pipe.ogg',2),
+    'push' : load_sound('snd/push.ogg',4), // ?
+    'squeak-high' : load_sound('snd/squeak-high.ogg',2),
+    'squeak-low' : load_sound('snd/squeak-low.ogg',2),
+    's-2' : load_sound('snd/s-2.ogg',8),
+    's-1' : load_sound('snd/s-1.ogg',16),
+    's1' : load_sound('snd/s1.ogg',8),
+    's2' : load_sound('snd/s2.ogg',8),
+    's3' : load_sound('snd/s3.ogg',8),
+    's4' : load_sound('snd/s4.ogg',6),
+    'short-high-chord' : load_sound('snd/short-high-chord.ogg',4),
 };
 
 var PLAY=function(type,vol) {
-    var snd=Sounds[type];
-    snd.volume=vol;
+    var s = Sounds[type];
+    s.index = ++s.index%s.max;
+    snd = s.samples[s.index];
+    snd.volume = vol;
     snd.play();
 };
 
@@ -68,25 +85,6 @@ var Sprites = {
     'PIPE-V': load_image('img/pipe-v.png'),
     'TURNCOCK-H': load_image('img/turncock-h.png'),
     'TURNCOCK-V': load_image('img/turncock-v.png')
-    /// bomb, detonator...
-    /*			 
-			 ,
-    'HERO' : {'SQUARE':load_image('img/hero-square.png'),
-	      'TRIANGLE':load_image('img/hero-triangle.png'),
-	      'DISK':load_image('img/hero-disk.png'),
-	      'NORMAL':load_image('img/hero-normal.png')},
-
-			 'GUN' : {'up':load_image('img/gun-up.png'),
-			 'down':load_image('img/gun-down.png'),
-			 'left':load_image('img/gun-left.png'),
-			 'right':load_image('img/gun-right.png')},
-			 'PARTICLE': [load_image('img/particle.png'),load_image('img/particle2.png')],
-			 'ANT': {'up':load_image('img/ant-up.png'),
-			 'down':load_image('img/ant-down.png'),
-			 'left':load_image('img/ant-left.png'),
-			 'right':load_image('img/ant-right.png')}
-    */
-
 };
 
 var vcx = 0;
@@ -158,9 +156,37 @@ setInterval(function() {
     hero.dx = dx;
     hero.dy = dy;
     if(dx!=0 || dy!=0) {
+	PLAY('s-1',0.9-0.23*Math.random()); /// or 'push'?
 	//hero.facing=new_facing(hero.facing,dx,dy);
     }
     the_world = update_thing(the_world, hero);
     the_world = world_step(the_world);
+
+    /// SFX:
+    for(var i=0;i<the_world.facts.length;i++) {
+	var fact = the_world.facts[i];
+	var vol = 0.9;
+	switch(fact[0]) {
+	case 'SHIFT TO':
+	    vol=1.0;
+	case 'PUSHED':
+	    switch(fact[2]) {
+	    case 'SQUARE': PLAY('s1',vol); break;
+	    case 'DISK': PLAY('s2',vol); break;
+	    case 'TRIANGLE': PLAY('s3',vol); break;
+	    default:  PLAY('push',vol); break;
+	    }
+	    break;
+	case 'ANNIHILATE': PLAY('short-high-chord',vol); break;
+	case 'TELEPORT': PLAY('pipe',vol); break;
+	case 'TURNCOCK': PLAY('squeak-high',1.0); break;
+	case 'PICKUP': PLAY('s4',vol); break;
+	case 'OPENED': PLAY('s4',vol); break;
+	case 'FAILED TO OPEN':
+	case 'FAILED TO PUSH':
+	case 'THIS PIPE IS CLOSED':
+	    PLAY('s-2',vol); break;
+	}
+    }
 
 },123);
