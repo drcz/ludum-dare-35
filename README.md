@@ -1,3 +1,4 @@
-# LD35...
+# 3 Rules of 2-Color Shapeshifting in a Microworld on a Torus
 
-still wondering what the theme will be...
+my first attempts at LUDUM DARE 35 -- this edition's theme is "shapeshifting".
+
