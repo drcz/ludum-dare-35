@@ -9,7 +9,7 @@ var clone_obj = function(obj) {
 };
 
 var stdLegend = {
-    '&':{'type':'HERO-SQUARE','dx':0,'dy':0,'facing':'down'},
+    '&':{'type':'HERO-SQUARE','dx':0,'dy':0,'facing':'down','inventory':[]},
     '#':{'type':'WALL'},
     'M':{'type':'MACHINE'},
     '(':{'type':'HOLE-DISK'},
@@ -28,6 +28,7 @@ var stdLegend = {
     'I':{'type':'DOOR'}
 };
 
+
 var Levels = [
     /// level 1
     {'map' : [
@@ -42,7 +43,7 @@ var Levels = [
     ],
      'legend' : {}
     },
-    /// level 2
+    /// level 2 [chyba raczej kurde 4]
      {
       'map' : [
 	  ".....|...######...........",
@@ -91,6 +92,20 @@ var load_level = function(num) {
 	    new_thing.y = j;
 	    things.push(new_thing);
 	}
-    world = mk_world(things,perim_v,perim_h); // muy importante! ;)
+    world = mk_world(things,perim_v,perim_h); // muy importante!
     return new_world_order(world);
+};
+
+/// check how many of these little shits are on the level y'know...
+/// YAEEEY, SHAPES AND NUMBERS! :D
+var count_shapes = function(world) {
+    var shapes={'squares':0,'triangles':0,'disks':0};
+    for(var i=0;i<world.things.length;i++) {
+	switch(world.things[i].type) {
+	case 'SQUARE': shapes.squares++; break;
+	case 'TRIANGLE': shapes.triangles++; break;
+	case 'DISK': shapes.disks++; break;
+	}
+    }
+    return shapes;
 };

@@ -304,7 +304,6 @@ var c_death = function(world, active,passive) {
 };
 
 var c_push = function(world, active,passive) {
-    //// TODO: sure?    
     var dx = signum(passive.x - active.x);
     var dy = signum(passive.y - active.y);
     var x = passive.x;
@@ -314,7 +313,7 @@ var c_push = function(world, active,passive) {
     if(is_it_still_there==null) {
 	active.x = x;
 	active.y = y;
-//	active.facing = new_facing(active.facing, dx,dy);
+	active.facing = new_facing(active.facing, dx,dy);
 	world = update_thing(world, active);
 	world = notice(world, ['PUSHED',active.type,passive.type]);
     } else {
@@ -369,7 +368,6 @@ var c_open = function(world, active,passive) {
 		world = update_thing(world, active);
 		world = delete_thing(world, passive);
 		world = notice(world,['OPENED', active.type, passive.type]);
-		/// todo: some info on loss? naah.
 		return(world);
 	    }
 	}
@@ -433,7 +431,7 @@ var c_active_teleport = function(world, active, passive) {
 	var end = pipe_ends[0];
 	/// oh, and check if it's open
 	if(!end.open) {
-	    world = notice(world, ["THIS PIPE IS CLOSED"]); //?
+	    world = notice(world, ["THIS PIPE IS CLOSED"]);
 	    return world;
 	}
 	/// this is tricky, and I've got fever right now :)
@@ -448,12 +446,12 @@ var c_active_teleport = function(world, active, passive) {
 	world = move_thing(world, active, nx,ny);
 	var check = world.things[ai];
 	if(check.x==nx && check.y==ny) {
-	    world = notice(world, ["TELEPORT",active.type,passive.type]); //?
+	    world = notice(world, ["TELEPORT",active.type,passive.type]); 
 	} else {
 	    active.x = ox;
 	    active.y = oy;
 	    world = update_thing(world, active);
-	    world = notice(world, ["FAILED TO TELEPORT",active.type,passive.type]); //?
+	    world = notice(world, ["FAILED TO TELEPORT",active.type,passive.type]);
 	}
     } else {
 	/// no notice there I guess...
