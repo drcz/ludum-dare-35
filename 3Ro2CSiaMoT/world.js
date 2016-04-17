@@ -424,7 +424,7 @@ var c_active_teleport = function(world, active, passive) {
     var dx = signum(passive.x - active.x);
     var dy = signum(passive.y - active.y);
     if(active.dx != undefined) {
-	/// don't subtract like this on Torus!
+	/// don't subtract like this on Torus...
 	dx = active.dx; dy = active.dy;
     }
     /// is it the end, and do we come from proper direction?
@@ -448,20 +448,20 @@ var c_active_teleport = function(world, active, passive) {
 	}
 	/// this is tricky, and I've got fever right now :)
 	var ox = active.x, oy = active.y;
-	//var odx = dx, ody = dy;
+	var odx = dx, ody = dy;
 	var nx = end.x + end.dx;
 	var ny = end.y + end.dy;
 	var ai = active.index;
 	active.x = end.x; active.y = end.y;
-	//active.dx = end.dx; active.dy = end.dy;
+	active.dx = end.dx; active.dy = end.dy;
 	world = update_thing(world, active);
 	world = move_thing(world, active, nx,ny);
 	var check = world.things[ai];
 	if(check.x==nx && check.y==ny) {
 	    world = notice(world, ["TELEPORT",active.type,passive.type]); 
 	} else {
-	    active.x = ox;
-	    active.y = oy;
+	    active.x = ox; active.y = oy;
+	    active.dx = odx; active.dx = ody;
 	    world = update_thing(world, active);
 	    world = notice(world, ["FAILED TO TELEPORT",active.type,passive.type]);
 	}

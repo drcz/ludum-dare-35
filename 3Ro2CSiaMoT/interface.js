@@ -290,7 +290,7 @@ var draw_board = function(world,status,msg,fade) {
     var x=offset_x,y=offset_y;
     for(var j=viewport_center_y-viewport_dh;j<=viewport_center_y+viewport_dh;j++) {
 	for(var i=viewport_center_x-viewport_dw;i<=viewport_center_x+viewport_dw;i++) {
-	    var o=find_by_pos(the_world,i,j);
+	    var o=find_by_pos(world,i,j);
 	    var sprite=Sprites['BLANK'][rand(0,2)]; // :)
 	    if(o!=null && y<=fade*tile_h) {
 		sprite=Sprites[o.type];
@@ -434,7 +434,6 @@ var draw_title = function() {
 
     var y=0;
     for(var i=0;i<text.length;i++) {
-	console.log(text[i]);
 	write_centered_line(text[i],y);
 	y+=tile_h;
     }
@@ -466,7 +465,6 @@ var draw_help = function() {
 
     var y=0;
     for(var i=0;i<text.length;i++) {
-	console.log(text[i]);
 	write_centered_line(text[i],y);
 	y+=tile_h;
     }
@@ -524,6 +522,7 @@ var do_play = function() {
 	GAME_STATE = 'FADE OUT death';
 	message.text = 'SUICIDE -- RESTART';
 	message.expires = 26;
+	PLAY('death',0.84);
     }
 
 
@@ -694,16 +693,16 @@ var do_gameover = function() {
     }
 };
 
-
 var fin_world = mk_world([{'type':'HERO-SQUARE','x':4,'y':0,'facing':'left'},
 			  {'type':'HERO-TRIANGLE','x':2,'y':0,'facing':'left'},
-			  {'type':'HERO-DISK','x':6,'y':0,'facing':'right'}],33,23);
+			  {'type':'HERO-DISK','x':6,'y':0,'facing':'right'}],
+			 33,23);
 
 var do_victoly = function() {
     if(_fadin_==3) PLAY('s-2',0.33);
     if(_fadin_==6) PLAY('s-1',0.33);
     if(_fadin_==8) _fadin_=0;
-    draw_board(fin_world,null,'YOU WON!!!',33);
+    draw_board(fin_world,null,'VICTOLY!!!',33);
 };
 
 var do_title = function() {

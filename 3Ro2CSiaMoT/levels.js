@@ -30,7 +30,7 @@ var stdLegend = {
 
 
 var Levels = [
-    /// level 1 -- nauka o regułach
+    /// level 0 -- nauka o regułach
     {'map' : [
 	"......................",
 	".....##############...",
@@ -44,13 +44,22 @@ var Levels = [
      'legend' : {},
      'name' : 'welcome to the torus'
     },
-    /// level2: nauka o wpadaniu w dziury.
-    /// TODO
-    /// level 3 -- nauka o działkach
+    /// level 1 -- nauka o wpadaniu w dziury.
     {'map' : [
-	"........###..(..#.|..###",
-	".......##A#######.L--#.#",
-	"......#..............###",
+	"..#..[..........#..",
+	".#M..[.....&.....#.",
+	"#....[.........V..#",
+	".H...[...........<[",
+	"###################"
+    ],
+     'legend' : {},
+     'name' : 'mind your holes'
+    },
+    /// level 2 -- nauka o dzialkach.
+    {'map' : [
+	".......M###..(..#.|.###.",
+	".......##A#######.L-#.#B",
+	"......#.............###.",
 	"...####.................",
 	"###(.O....#......#######",
 	"...<......#..&..#....V..",
@@ -58,21 +67,63 @@ var Levels = [
 	"..|.....###..O..#.|.....",
 	"..L------7#.....#.|....." 
     ],
-     'legend' : {'A': {'type':'GUN','dx':0,'dy':1,'facing':'down','count':0,'maxcount':4}},
-     'name' : 'meeting guns'
+     'legend' : {'A': {'type':'GUN','dx':0,'dy':1,'facing':'down','count':0,'maxcount':3},
+		 'B': {'type':'GUN','dx':1,'dy':0,'facing':'right','count':0,'maxcount':6}},
+     'name' : 'guns of torxton'
     },
-    /// level 4 -- nauka o blokowaniu działek figurami
-    /// level 5 -- nauka o ruroportacji
-    /// level 6 -- nauka o ruroportacji figur
-    /// level 7 -- nauka 
-    /// level 8 first dark ride!
+    /// level 3 -- nauka o blokowaniu dzialek figurami
+    {'map' : [
+	"...##....###[###...",
+	"........#.......#..",
+	"#########.[...H.###",
+	".............A..[..",
+	"###..####.&.....###",
+	"..#..#..#.......#..",
+	"..#H.#...###[###...",
+	"..#..#.....#.#....."
+    ],
+     'legend' : {'A': {'type':'GUN','dx':-1,'dy':0,'facing':'left','count':0,'maxcount':5}},
+     'name' : 'panic'
+    },
+
+    /// level 4 -- nauka o ruroportacji
+    {'map' : [
+	".....TC7.....",
+	"#####|#a#####",
+	"#....|#.&....",
+	"#....|#...B7.",
+	"#...AJ#....|.",
+	"#.;...#....|.",
+	"#.....#....|.",
+	"###########|#",
+	"...........|.",
+	".VHH.......|.",
+	"...........|.",
+	".<[[.T-----J.",
+	".....|.<..V..",
+	".....|.<..V..",
+	".....|.<..V..",
+	".#I##|#######",
+	"D#...b......#",
+	"..<......V..."
+    ],
+     'legend': {
+	 "A":{'dx':-1,'dy':0,'type':'PIPE-H','label':'A','open':false},
+	 "a":{'dx':0,'dy':1,'type':'PIPE-V','label':'A','open':false},
+	 "B":{'dx':-1,'dy':0,'type':'PIPE-H','label':'B','open':true},
+	 "b":{'dx':0,'dy':1,'type':'PIPE-V','label':'B','open':true},
+	 "C":{'type':'TURNCOCK-H', 'label':'A'},
+	 "D":{'type':'GUN','dx':0,'dy':-1,'facing':'up','count':0,'maxcount':5}},
+     'name' : 'pipes'
+    },
+    /// level 5 zaczynemy granie
      {
       'map' : [
 	  ".....|...######...........",
 	  ".....L---b....##########..",
 	  ".###.#<.V....;#.<#...(..#.",
 	  ".#&#.#H####.###.V#......#.",
-	  ".#H#.#......O.(..#...a..#.",
+	  ".#H#D#......O.(..#...a..#.",
 	  "AO.###[###.#######...L----",
 	  "#.[....V................#.",
 	  "---------7.T--------------",
@@ -90,7 +141,8 @@ var Levels = [
 	     "a":{'dx':0,'dy':-1,'type':'PIPE-V','label':'A','open':true},
 	     "B":{'dx':1,'dy':0,'type':'PIPE-H','label':'B','open':false},
 	     "b":{'dx':1,'dy':0,'type':'PIPE-H','label':'B','open':false},
-	     "C":{'type':'TURNCOCK-V', 'label':'B'}
+	     "C":{'type':'TURNCOCK-V', 'label':'B'},
+	     "D":{'type':'GUN','dx':0,'dy':-1,'facing':'up','count':0,'maxcount':7}
 	 },
 	 'name' : 'first dark ride'
      }
