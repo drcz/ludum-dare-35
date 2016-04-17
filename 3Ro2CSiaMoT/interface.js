@@ -241,15 +241,15 @@ var draw_board = function(world,status,msg,fade) {
     var viewport_center_x=vcx;
     var viewport_center_y=vcy;
     //kontekst.drawImage(Background,0,0);
-    kontekst.fillStyle="#FFFFFF";
-    kontekst.fillRect(0,0,screen_w,screen_h);
+    //kontekst.fillStyle="#FFFFFF";
+    //kontekst.fillRect(0,0,screen_w,screen_h);
 
     var x=offset_x,y=offset_y;
     for(var j=viewport_center_y-viewport_dh;j<=viewport_center_y+viewport_dh;j++) {
 	for(var i=viewport_center_x-viewport_dw;i<=viewport_center_x+viewport_dw;i++) {
 	    var o=find_by_pos(the_world,i,j);
 	    var sprite=Sprites['BLANK'][rand(0,2)]; // :)
-	    if(o!=null) {
+	    if(o!=null && y<=fade*tile_h) {
 		sprite=Sprites[o.type];
 		switch(o.type) {
 		case 'WALL':
@@ -287,35 +287,37 @@ var draw_board = function(world,status,msg,fade) {
 	y+=tile_h;
     }
 
-    /// statusbar        
-    for(var i=0;i<status.lives;i++) {
-    	kontekst.drawImage(Sprites[hero.type].right[rand(1,2)],x,y);
-	x+=tile_w;
+    if(status!=null) {
+	/// statusbar        
+	for(var i=0;i<status.lives;i++) {
+    	    kontekst.drawImage(Sprites[hero.type].right[rand(1,2)],x,y);
+	    x+=tile_w;
+	}
+	kontekst.drawImage(Sprites['BLANK'][1],x,y); x+=tile_w;
+	/// !!!!!!
+	for(var i=0;i<hero.inventory.length;i++) {
+	    kontekst.drawImage(Sprites['KEY'][rand(0,1)],x,y);
+	    x+=tile_w;
+	} /// \!!!!!
+	kontekst.drawImage(Sprites['BLANK'][rand(1,2)],x,y); x+=tile_w;
+	for(var i=0;i<status.squares;i++) {
+	    sprite = Sprites['SQUARE'][rand(0,2)];
+    	    kontekst.drawImage(sprite,x,y);
+	    x+=tile_w;
+	}
+	kontekst.drawImage(Sprites['BLANK'][rand(1,2)],x,y); x+=tile_w;
+	for(var i=0;i<status.triangles;i++) {
+	    sprite = Sprites['TRIANGLE'][rand(0,1)];
+    	    kontekst.drawImage(sprite,x,y);
+	    x+=tile_w;
+	}
+	kontekst.drawImage(Sprites['BLANK'][rand(1,2)],x,y); x+=tile_w;
+	for(var i=0;i<status.disks;i++) {
+	    sprite = Sprites['DISK'][rand(0,2)];
+    	    kontekst.drawImage(sprite,x,y);
+	    x+=tile_w;
+	}    
     }
-    kontekst.drawImage(Sprites['BLANK'][1],x,y); x+=tile_w;
-    /// !!!!!!
-    for(var i=0;i<hero.inventory.length;i++) {
-	kontekst.drawImage(Sprites['KEY'][rand(0,1)],x,y);
-	x+=tile_w;
-    } /// \!!!!!
-    kontekst.drawImage(Sprites['BLANK'][1],x,y); x+=tile_w;
-    for(var i=0;i<status.squares;i++) {
-	sprite = Sprites['SQUARE'][rand(0,2)];
-    	kontekst.drawImage(sprite,x,y);
-	x+=tile_w;
-    }
-    kontekst.drawImage(Sprites['BLANK'][1],x,y); x+=tile_w;
-    for(var i=0;i<status.triangles;i++) {
-	sprite = Sprites['TRIANGLE'][rand(0,1)];
-    	kontekst.drawImage(sprite,x,y);
-	x+=tile_w;
-    }
-    kontekst.drawImage(Sprites['BLANK'][1],x,y); x+=tile_w;
-    for(var i=0;i<status.disks;i++) {
-	sprite = Sprites['DISK'][rand(0,2)];
-    	kontekst.drawImage(sprite,x,y);
-	x+=tile_w;
-    }    
     while(x<screen_w) {
 	kontekst.drawImage(Sprites['BLANK'][rand(1,2)],x,y);
 	x+=tile_w;
@@ -335,17 +337,40 @@ var draw_board = function(world,status,msg,fade) {
 /// MAIN //////////////////////////////////////////////////////
 
 /// yeah, whatever.
-var the_world = load_level(1);
-var lives = 5;
+var _max_lives_ = 5; /// ??
+var lives = _max_lives_;
+var level = 0;
+var message = {'text':'', 'expires':0};
+var the_world = {};
+var GAME_STATE = 'TITLE';
+var _fadin_ = 0;
+var _max_fadin_ = 17;
+var _min_fadin_ = -2;
 
-var message = {'text':'get ready!', 'expires':7};
+var init_level = function(n) {
+    level = n;
+    message = {'text':'get ready!', 'expires':18};
+    the_world = load_level(n);
+    GAME_STATE = 'FADE IN';
+    _fadin_ = _min_fadin_;
+};
 
-function do_play() {
 
+
+var do_play = function() {
     var game_stats = count_shapes(the_world);
     game_stats.lives = lives; // !!
+    
+    /// HAHA! MAYBE THIS LEVEL IS ALREADY SOLVED? <- a fine place do check that! [not really]
+    if(game_stats.squares==0
+       && game_stats.disks==0
+       && game_stats.triangles==0) {
+	GAME_STATE = 'FADE OUT levelup';
+	PLAY('short-high-chord',0.99);
+    }
+
     /// show the world
-    draw_board(the_world,game_stats,((message.expires-->0)?message.text:''),10);
+    draw_board(the_world,game_stats,((message.expires-->0)?message.text:''),_max_fadin_);
     /// get some feedback
     var dx=joystick.dx;
     var dy=joystick.dy;    
@@ -367,8 +392,10 @@ function do_play() {
 	var vol = 0.9-0.13*Math.random();
 	switch(fact[0]) {
 	case 'SHIFT TO':
-	    message.text='SHIFT!';
-	    message.expires=2;
+	    if(messages.expires<=0) {
+		message.text='SHIFT!';
+		message.expires=2;
+	    }
 	    vol=1.0;
 	case 'PUSHED':
 	    switch(fact[2]) {
@@ -389,12 +416,14 @@ function do_play() {
 	    break;
 
 	case 'TELEPORT':
-	    switch(rand(1,3)) {
-	    case 1: message.text='WHOA!'; break;
-	    case 2: message.text='WOW!'; break;
-	    case 3: message.text='WEE!'; break;
+	    if(message.expires<=0) {
+		switch(rand(1,3)) {
+		case 1: message.text='WHOA!'; break;
+		case 2: message.text='WOW!'; break;
+		case 3: message.text='WEE!'; break;
+		}
+		message.expires=2;
 	    }
-	    message.expires=2;
 	    PLAY('pipe',vol);
 	    break;
 
@@ -409,7 +438,7 @@ function do_play() {
 	    PLAY('s4',vol);
 	    break;
 	case 'OPENED':
-	    message.text='the lock opens';
+	    message.text='the door ulocks';
 	    message.expires=4;
 	    PLAY('s4',vol);
 	    break;
@@ -423,6 +452,11 @@ function do_play() {
 	    message.expires=4;
 	    PLAY('s-2',vol); break;	    
 
+	case "NO UNSHIFTIN":
+	    message.text="can't unshift further";
+	    message.expires=5;
+	    PLAY('s-2',vol); break;	    
+
 	case 'THIS PIPE IS CLOSED':
 	    switch(rand(1,2)) {
 	    case 1: message.text="can't do that";break;
@@ -430,13 +464,119 @@ function do_play() {
 	    }
 	    message.expires=4;
 	    PLAY('s-2',vol); break;
+
+	case 'DIES':
+	    switch(rand(1,2)) {
+	    case 1: message.text = 'YOU DIE!'; break;
+	    case 2: message.text = 'OOPS... YOU DIE.'; break;
+	    }
+	    message.expires = 16;
+	    PLAY('death',1.0);
+	    _faind_ = _max_fadin_-1;
+	    GAME_STATE = 'FADE OUT death';
+	    break;
 	}
-    }    
-}
+    }
+};
 
 
-setInterval(function() { 
-    /// TODO: game states sth
-    do_play();
+var do_fadein = function() {
+    var game_stats = count_shapes(the_world);
+    game_stats.lives = lives; // !!
+    draw_board(the_world,game_stats,((message.expires-->0)?message.text:''),_fadin_);
+    if(++_fadin_ >= _max_fadin_) {
+	GAME_STATE = 'PLAY';
+    }
+};
 
-},166); /// ~6Hz
+var do_fadeout_death = function() {
+    var game_stats = {'squares':0,'triangles':0,'discs':0, 'lives':lives-(_fadin_%2)};
+    draw_board(the_world,game_stats,((message.expires-->0)?message.text:''),_fadin_);
+    hero = find_hero(the_world);
+    switch(mod(_fadin_,4)) {
+    case 0: hero.facing = 'right'; break;
+    case 1: hero.facing = 'down'; break;
+    case 2: hero.facing = 'left'; break;
+    case 3: hero.facing = 'up2'; break;
+    }
+    if(_fadin_-- <= 0) {
+	if(--lives<=0) {
+	    GAME_STATE = 'GAME OVER';
+	}
+	else {
+	    init_level(level);
+	    _fadin_ = _min_fadin_;
+	    GAME_STATE = 'FADE IN';
+	}
+    }
+};
+
+var do_fadeout_levelup = function() {
+    draw_board(the_world,null,'LEVEL COMPLETE.',_fadin_);
+    hero = find_hero(the_world);
+    switch(mod(_fadin_,4)) {
+    case 0: hero.facing = 'right'; break;
+    case 1: hero.facing = 'down'; break;
+    case 2: hero.facing = 'left'; break;
+    case 3: hero.facing = 'up2'; break;
+    }
+    if(_fadin_-- <= 0) {
+	level++;
+	if(level>1) {
+	    GAME_STATE = 'VICTOLY';
+	} else {
+	    init_level(level);
+	    _fadin_ = _min_fadin_;
+	    GAME_STATE = 'FADE IN';
+	}
+    }
+};
+
+
+
+var do_title = function() {
+
+    /// TODO
+    init_level(0);
+    GAME_STATE = 'FADE IN';
+};
+
+var do_gameover = function() {
+    the_world = mk_world([],2,3);
+    draw_board(the_world,null,'GAME OVER.',0);
+    if(++_fadin_>= 33) {
+	GAME_STATE = 'TITLE';
+    }
+};
+
+var do_help = function () {
+    /// TODO!!!
+};
+
+var do_victoly = function() {
+    var fcng = (++_fadin_%2?'left':'right');
+    if(_fadin_==3) PLAY('s-2',0.33);
+    if(_fadin_==6) PLAY('s-1',0.33);
+    if(_fadin_==8) _fadin_=0;
+
+    the_world = mk_world([{'type':'HERO-SQUARE','x':4,'y':0,'facing':fcng},
+			  {'type':'HERO-TRIANGLE','x':2,'y':0,'facing':fcng},
+			  {'type':'HERO-DISK','x':6,'y':0,'facing':fcng}],33,23);
+    draw_board(the_world,null,'YOU WON!!!',33);
+    
+
+};
+
+var Game_states_step = {
+    'PLAY': do_play,
+    'FADE IN': do_fadein,
+    'FADE OUT death': do_fadeout_death,
+    'FADE OUT levelup': do_fadeout_levelup,
+    'GAME OVER': do_gameover,
+    'HELP': do_help,    
+    'VICTOLY': do_victoly,
+    'TITLE': do_title
+};
+
+
+setInterval(function() { Game_states_step[GAME_STATE](); },143); /// ~7Hz -- like brain in a dreamstate.

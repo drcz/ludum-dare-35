@@ -296,9 +296,10 @@ var c_fission_passive = function(world, active,passive) {
 
 var c_death = function(world, active,passive) {
     /// does death come alone, or with eager reinforcements?
-    /// TODO!!
-    active.dead = true;
-    world = update_thing(world, active); // ?
+    active.x=passive.x;
+    active.y=passive.y;
+    //active.dead = true; 
+    world = update_thing(world, active);
     world = notice(world, ['DIES',active.type]);
     return(world);
 };
@@ -474,6 +475,12 @@ var c_turncock = function(world, active,passive) {
     return(world);
 };
 
+var c_just_tell = function(world, active,passive) {
+    /// blee.
+    world = notice(world,["NO UNSHIFTIN"]);
+    return(world);
+};
+
 
 /// plus the action...
 /// notice the non-categorical order, ie "compose(f,g)=gf"
@@ -502,6 +509,8 @@ var collisions = {
     'HERO-DISK|HOLE-DISK': c_death,
     'HERO-TRIANGLE|MACHINE':  compose(c_active2square,c_explode_passive),
     'HERO-DISK|MACHINE':  compose(c_active2triangle,c_explode_passive),
+
+    'HERO-SQUARE|MACHINE': c_just_tell,
 
     'HERO-TRIANGLE|SQUARE': c_fail,
     'HERO-DISK|SQUARE': c_fail,

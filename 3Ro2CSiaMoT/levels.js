@@ -9,7 +9,7 @@ var clone_obj = function(obj) {
 };
 
 var stdLegend = {
-    '&':{'type':'HERO-SQUARE','dx':0,'dy':0,'facing':'down','inventory':[]},
+    '&':{'type':'HERO-SQUARE','dx':0,'dy':0,'facing':'left','inventory':[]},
     '#':{'type':'WALL'},
     'M':{'type':'MACHINE'},
     '(':{'type':'HOLE-DISK'},
