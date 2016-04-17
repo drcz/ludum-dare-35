@@ -1,17 +1,40 @@
 /// INPUT /////////////////////////////////////////////////////
-var joystick={dx:0,dy:0}; /// a joystick, right ;)
+var joystick={dx:0,dy:0,h:false,r:false}; /// a joystick, right ;)
 
 reset_joystick = function() {
-    joystick.dx = 0;
-    joystick.dy = 0;
+    joystick.dx = joystick.dy = 0;
+    joystick.h = joystick.r = 0;
 };
 
 window.addEventListener('keydown',
 			function(evt) {
-			    if(evt.keyCode==37) {joystick.dx=-1; joystick.dy=0;} // left arrow 37
-			    if(evt.keyCode==39) {joystick.dx=1; joystick.dy=0;}  // right arrow 39
-			    if(evt.keyCode==38) {joystick.dy=-1; joystick.dx=0; evt.preventDefault();}
-			    if(evt.keyCode==40) {joystick.dy=1; joystick.dx=0; evt.preventDefault();}
+			    switch(evt.keyCode) {
+			    case 37: // left arr.
+			    case 65: // A
+				joystick.dx=-1; joystick.dy=0; break;
+			    case 39: // right arr.
+			    case 68: // D
+				joystick.dx=1; joystick.dy=0; break;
+			    case 38: /// up arr.
+				evt.preventDefault(); /// no scrolling
+			    case 87: /// W
+				joystick.dx=0; joystick.dy=-1;
+				break;
+			    case 40: // down arr.
+				evt.preventDefault(); /// no scrolling
+			    case 83: // S
+				joystick.dx=0; joystick.dy=1;
+				break;
+			    case 112: /// f1
+				evt.preventDefault(); // no brower help
+			    case 72: /// H
+				joystick.h=true;
+				break;
+			    case 27: /// esc
+			    case 82: /// R
+				joystick.r=true;
+				break;
+			    }
 			},
 			false);
 
@@ -126,6 +149,19 @@ var Sprites = {
 			       load_image('img/hero-disk3-right.png') ]
 		  },
 
+    'GUN' : {'up' : [ load_image('img/gun-up.png'),
+		      load_image('img/gun-up2.png') ],
+	     'down' : [ load_image('img/gun-down.png'),
+			load_image('img/gun-down2.png') ],
+	     'left' : [ load_image('img/gun-left.png'),
+			load_image('img/gun-left2.png') ],
+	     'right' : [ load_image('img/gun-right.png'),
+			 load_image('img/gun-right2.png') ]
+	    },
+
+    'PARTICLE' : [ load_image('img/particle.png'),
+		   load_image('img/particle2.png') ],
+
     'BLANK' : [ load_image('img/blank.png'),
     	      	load_image('img/letters/space2.png'),
 		load_image('img/letters/space.png') ],
@@ -216,10 +252,17 @@ var Letters = {
     '-' : [load_image('img/letters/hyphen.png'),load_image('img/letters/hyphen2.png')], 
     '.' : [load_image('img/letters/period.png'),load_image('img/letters/period2.png')], 
     '\'' : [load_image('img/letters/quot.png'),load_image('img/letters/quot2.png')], 
-    /// I forgot to draw a question mark.
-    '*' : [load_image('img/letters/circ.png'),load_image('img/letters/circ2.png')], 
-    '^' : [load_image('img/letters/delta.png'),load_image('img/letters/delta2.png')], 
-    '#' : [load_image('img/letters/sq.png'),load_image('img/letters/sq2.png')]
+    /// I forgot to draw a question mark...
+    '*' : Sprites['DISK'],
+    '^' : Sprites['TRIANGLE'],
+    '#' : Sprites['SQUARE'],
+    '(' : Sprites['HERO-DISK']['right'],
+    '[' : Sprites['HERO-SQUARE']['left'],
+    '<' : Sprites['HERO-TRIANGLE']['right'],
+    ')' : Sprites['HOLE-DISK'],
+    '>' : Sprites['HOLE-TRIANGLE'],
+    ']' : Sprites['HOLE-SQUARE'],
+    '+' : Sprites['MACHINE']
 };
 
 var vcx = 0;
@@ -230,7 +273,7 @@ var draw_board = function(world,status,msg,fade) {
     anim_frame++;
     anim_frame%=3;
     var tile_w=32, tile_h=32;
-    var offset_x=rand(0,1), offset_y=rand(0,1);
+    var offset_x=rand(0,0), offset_y=rand(0,0);
     var viewport_dw=10, viewport_dh=8;
 
     var hero = find_hero(world);
@@ -268,9 +311,13 @@ var draw_board = function(world,status,msg,fade) {
 		case 'MACHINE':
 		case 'DOOR':
 		case 'KEY':
+		case 'PARTICLE':
 		case 'TURNCOCK-H':
 		case 'TURNCOCK-V':
-		    sprite=sprite[rand(0,1)/* anim_frame*/];
+		    sprite=sprite[rand(0,1)];
+		    break;
+		case 'GUN':
+		    sprite=sprite[o.facing][rand(0,1)];
 		    break;
 		case 'HERO-SQUARE':
 		case 'HERO-TRIANGLE':
@@ -324,15 +371,106 @@ var draw_board = function(world,status,msg,fade) {
     }
 
     /// aa, message!
-    msg = msg.toLowerCase();
-    var mx = ((2*viewport_dw+1)-msg.length)/2;
+    if(msg != '') {
+	msg = msg.toLowerCase();
+	write_centered_line(msg, offset_y+(viewport_dh-1)*tile_h);
+    }			   
+    /*
+    var mx = Math.round(((2*viewport_dw+1)-txt.length)/2);
+    write_line(msg, offset_x+tile_w*mx, offset_y+(viewport_dh-1));
     for(var i=0;i<msg.length;i++) {
 	kontekst.drawImage(Letters[msg[i]][rand(0,1)],
 			   offset_x+tile_w*(mx+i),
-			   offset_y+tile_w*(viewport_dh-1));
+			   offset_y+tile_h*(viewport_dh-1));
+    }
+    */
+};
+
+
+/// i takie takie... //////////////////////
+
+/// assuming the background is already there...
+var write_line = function(txt,x,y) {
+    var tile_w=32; /// :)
+    txt=txt.toLowerCase();
+    for(var i=0;i<txt.length;i++) {
+	var ch = Letters[txt[i]];
+	if(ch==undefined) ch=Letters['#']; //?
+	kontekst.drawImage(ch[rand(0,1)], x,y);
+	x+=tile_w;
     }
 };
 
+var write_centered_line = function(txt,y) {
+    var viewport_dw = 10; /// @#$!
+    var tile_w=32; /// :)
+    var mx = Math.round(((2*viewport_dw+1)-txt.length)/2);
+    write_line(txt,mx*tile_w,y);
+};
+
+var draw_title = function() {
+    var tile_h = 32; // ;)
+    var text = [
+	"",
+	"three rules",
+	"of",
+	"two color",
+	"shape",
+	"shiftin'",
+	"in a microworld",
+        "on",
+	"a flickering torus",
+	"",
+	"",
+        "derczansky studio",	
+	"for",
+	"ludum dare xxxv",
+	"",
+	"",
+	"press h for help or",
+	"any move to start"
+//       123456789012345678901
+    ];
+
+    var y=0;
+    for(var i=0;i<text.length;i++) {
+	console.log(text[i]);
+	write_centered_line(text[i],y);
+	y+=tile_h;
+    }
+};
+
+var draw_help = function() {
+    var tile_h = 32; // ;)
+    var text = [
+	"the three rules are",
+	"a. [ pushes #^*",
+	"b. < pushes ^* ",
+	"c. ( pushes *  ",
+	"",
+	"you become what you",
+	"push with the ex-",
+	"ception of unshift",
+	"machines +. don't",
+	"fall into )]> while",
+	"being ([< resp.",
+	"",
+	"control hero with",
+	"WSAD or arrow keys.",
+	"R to commit suicide",
+        "H for this screen",
+	"",
+	"any move to continue"
+//       123456789012345678901
+    ];
+
+    var y=0;
+    for(var i=0;i<text.length;i++) {
+	console.log(text[i]);
+	write_centered_line(text[i],y);
+	y+=tile_h;
+    }
+};
 
 /// MAIN //////////////////////////////////////////////////////
 
@@ -341,16 +479,17 @@ var _max_lives_ = 5; /// ??
 var lives = _max_lives_;
 var level = 0;
 var message = {'text':'', 'expires':0};
-var the_world = {};
+var the_world = mk_world([],2,3);
 var GAME_STATE = 'TITLE';
+var OLD_GAME_STATE = 'TITLE'; //...
 var _fadin_ = 0;
 var _max_fadin_ = 17;
 var _min_fadin_ = -2;
 
 var init_level = function(n) {
     level = n;
-    message = {'text':'get ready!', 'expires':18};
-    the_world = load_level(n);
+    message = {'text':Levels[n].name, 'expires':18};
+    the_world = load_level(level);
     GAME_STATE = 'FADE IN';
     _fadin_ = _min_fadin_;
 };
@@ -372,6 +511,22 @@ var do_play = function() {
     /// show the world
     draw_board(the_world,game_stats,((message.expires-->0)?message.text:''),_max_fadin_);
     /// get some feedback
+
+    /// SPEAKING OF WHICH -- REQUEST FOR HELP?
+    if(joystick.h) {
+	OLD_GAME_STATE = 'PLAY';
+	GAME_STATE = 'HELP';
+	reset_joystick();
+    }
+    /// MAYBE A SUICIDE?
+    if(joystick.r) {
+	reset_joystick();
+	GAME_STATE = 'FADE OUT death';
+	message.text = 'SUICIDE -- RESTART';
+	message.expires = 26;
+    }
+
+
     var dx=joystick.dx;
     var dy=joystick.dy;    
     reset_joystick();
@@ -392,7 +547,7 @@ var do_play = function() {
 	var vol = 0.9-0.13*Math.random();
 	switch(fact[0]) {
 	case 'SHIFT TO':
-	    if(messages.expires<=0) {
+	    if(message.expires<=0) {
 		message.text='SHIFT!';
 		message.expires=2;
 	    }
@@ -486,6 +641,7 @@ var do_fadein = function() {
     draw_board(the_world,game_stats,((message.expires-->0)?message.text:''),_fadin_);
     if(++_fadin_ >= _max_fadin_) {
 	GAME_STATE = 'PLAY';
+	reset_joystick();
     }
 };
 
@@ -521,8 +677,7 @@ var do_fadeout_levelup = function() {
     case 3: hero.facing = 'up2'; break;
     }
     if(_fadin_-- <= 0) {
-	level++;
-	if(level>1) {
+	if(++level>=Levels.length) {
 	    GAME_STATE = 'VICTOLY';
 	} else {
 	    init_level(level);
@@ -532,40 +687,52 @@ var do_fadeout_levelup = function() {
     }
 };
 
-
-
-var do_title = function() {
-
-    /// TODO
-    init_level(0);
-    GAME_STATE = 'FADE IN';
-};
-
 var do_gameover = function() {
-    the_world = mk_world([],2,3);
     draw_board(the_world,null,'GAME OVER.',0);
     if(++_fadin_>= 33) {
 	GAME_STATE = 'TITLE';
     }
 };
 
-var do_help = function () {
-    /// TODO!!!
-};
+
+var fin_world = mk_world([{'type':'HERO-SQUARE','x':4,'y':0,'facing':'left'},
+			  {'type':'HERO-TRIANGLE','x':2,'y':0,'facing':'left'},
+			  {'type':'HERO-DISK','x':6,'y':0,'facing':'right'}],33,23);
 
 var do_victoly = function() {
-    var fcng = (++_fadin_%2?'left':'right');
     if(_fadin_==3) PLAY('s-2',0.33);
     if(_fadin_==6) PLAY('s-1',0.33);
     if(_fadin_==8) _fadin_=0;
-
-    the_world = mk_world([{'type':'HERO-SQUARE','x':4,'y':0,'facing':fcng},
-			  {'type':'HERO-TRIANGLE','x':2,'y':0,'facing':fcng},
-			  {'type':'HERO-DISK','x':6,'y':0,'facing':fcng}],33,23);
-    draw_board(the_world,null,'YOU WON!!!',33);
-    
-
+    draw_board(fin_world,null,'YOU WON!!!',33);
 };
+
+var do_title = function() {
+    draw_board(fin_world,null,'',0);
+    draw_title();
+    if(joystick.h) {
+	OLD_GAME_STATE = 'TITLE';
+	GAME_STATE = 'HELP'; /// ?!
+	reset_joystick();
+    }
+    if(joystick.dx!=0 || joystick.dy!=0) {
+	init_level(0);
+	GAME_STATE = 'FADE IN';
+	reset_joystick();
+    }
+};
+
+
+var do_help = function () {
+    draw_board(fin_world,null,'',0);
+    draw_help();
+    if(joystick.dx!=0 || joystick.dy!=0) {
+	reset_joystick();
+	GAME_STATE = OLD_GAME_STATE;
+    }
+};
+
+
+///////////////////////////////////////
 
 var Game_states_step = {
     'PLAY': do_play,
@@ -578,5 +745,4 @@ var Game_states_step = {
     'TITLE': do_title
 };
 
-
-setInterval(function() { Game_states_step[GAME_STATE](); },143); /// ~7Hz -- like brain in a dreamstate.
+setInterval(function(){ Game_states_step[GAME_STATE](); },143); /// ~7Hz -- like brain in a dreamstate.

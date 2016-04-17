@@ -30,7 +30,7 @@ var stdLegend = {
 
 
 var Levels = [
-    /// level 1
+    /// level 1 -- nauka o regułach
     {'map' : [
 	"......................",
 	".....##############...",
@@ -41,9 +41,31 @@ var Levels = [
 	"#[.H....#...####......",
 	".#######.............." 
     ],
-     'legend' : {}
+     'legend' : {},
+     'name' : 'welcome to the torus'
     },
-    /// level 2 [chyba raczej kurde 4]
+    /// level2: nauka o wpadaniu w dziury.
+    /// TODO
+    /// level 3 -- nauka o działkach
+    {'map' : [
+	"........###..(..#.|..###",
+	".......##A#######.L--#.#",
+	"......#..............###",
+	"...####.................",
+	"###(.O....#......#######",
+	"...<......#..&..#....V..",
+	"--7.....#.#.....#.T-----",
+	"..|.....###..O..#.|.....",
+	"..L------7#.....#.|....." 
+    ],
+     'legend' : {'A': {'type':'GUN','dx':0,'dy':1,'facing':'down','count':0,'maxcount':4}},
+     'name' : 'meeting guns'
+    },
+    /// level 4 -- nauka o blokowaniu działek figurami
+    /// level 5 -- nauka o ruroportacji
+    /// level 6 -- nauka o ruroportacji figur
+    /// level 7 -- nauka 
+    /// level 8 first dark ride!
      {
       'map' : [
 	  ".....|...######...........",
@@ -69,7 +91,8 @@ var Levels = [
 	     "B":{'dx':1,'dy':0,'type':'PIPE-H','label':'B','open':false},
 	     "b":{'dx':1,'dy':0,'type':'PIPE-H','label':'B','open':false},
 	     "C":{'type':'TURNCOCK-V', 'label':'B'}
-	 }
+	 },
+	 'name' : 'first dark ride'
      }
     /// TODO
 

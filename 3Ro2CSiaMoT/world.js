@@ -186,8 +186,8 @@ var e_trivial = function(world, thing) {
 
 var e_small = function(world, thing) {
     world = delete_thing(world, thing);
-    world = insert_thing(world, mk_boom(thing.x,thing.y,1)); // rand?!
-    world = notice(world, ['BOOM',thing.x,thing.y]);
+    world = insert_thing(world, mk_boom(thing.x,thing.y,1));
+    //world = notice(world, ['BOOM',thing.x,thing.y]); // ??
     return(world); 
 };
 
@@ -262,11 +262,12 @@ var c_stop_active = function(world, active,passive) {
     return(world);
 };
 
-/*
+
 var mk_particle = function(x,y, dx,dy) {
     return({'type':'PARTICLE', 'x':x,'y':y, 'dx':dx,'dy':dy});
 };
 
+/*
 var c_fission_active = function(world, active,passive) {
     var dx = signum(passive.x - active.x);
     var dy = signum(passive.y - active.y);
@@ -305,17 +306,23 @@ var c_death = function(world, active,passive) {
 };
 
 var c_push = function(world, active,passive) {
-    var dx = signum(passive.x - active.x);
-    var dy = signum(passive.y - active.y);
+    var dx = signum(passive.x - active.x); // !!!
+    var dy = signum(passive.y - active.y); // !!
+    if(active.dx != undefined) {
+	dx = active.dx; dy = active.dy; // way better.
+    }
     var x = passive.x;
     var y = passive.y;
     world = move_thing(world, passive, x+dx,y+dy);
     var is_it_still_there = find_by_pos(world,x,y);
     if(is_it_still_there==null) {
+	/*
 	active.x = x;
 	active.y = y;
 	active.facing = new_facing(active.facing, dx,dy);
 	world = update_thing(world, active);
+	*/
+	world = move_thing(world, active, x,y);
 	world = notice(world, ['PUSHED',active.type,passive.type]);
     } else {
 	world = notice(world, ['FAILED TO PUSH',active.type,passive.type]);
@@ -325,7 +332,7 @@ var c_push = function(world, active,passive) {
 
 var c_fail = function(world, active,passive) {
     /// only for sfx/msg:
-    world = notice(world, ['FAILED TO PUSH',active.type,passive.type]);
+    world = notice(world, ['FAILED TO PUSH',active.type,passive.type,"from c_fail"]);
     return(world);
 };
 
@@ -416,6 +423,10 @@ var c_active_stepover = function(world, active,passive) {
 var c_active_teleport = function(world, active, passive) {
     var dx = signum(passive.x - active.x);
     var dy = signum(passive.y - active.y);
+    if(active.dx != undefined) {
+	/// don't subtract like this on Torus!
+	dx = active.dx; dy = active.dy;
+    }
     /// is it the end, and do we come from proper direction?
     if(passive.dx != undefined
        && passive.dx ==-dx
@@ -545,30 +556,16 @@ var collisions = {
     '*|TURNCOCK-V': c_turncock,
 
     '*|PIPE-H': c_active_teleport,
-    '*|PIPE-V': c_active_teleport
+    '*|PIPE-V': c_active_teleport,
 
-    /*
-    'SQUARE|PIPE-H': c_active_teleport,
-    'TRIANGLE|PIPE-H': c_active_teleport,
-    'DISK|PIPE-H': c_active_teleport,
-    'HERO-SQUARE|PIPE-H': c_active_teleport,
-    'HERO-TRIANGLE|PIPE-H': c_active_teleport,
-    'HERO-DISK|PIPE-H': c_active_teleport,
-
-    'SQUARE|PIPE-V': c_active_teleport,
-    'TRIANGLE|PIPE-V': c_active_teleport,
-    'DISK|PIPE-V': c_active_teleport,
-    'HERO-SQUARE|PIPE-V': c_active_teleport,
-    'HERO-TRIANGLE|PIPE-V': c_active_teleport,
-    'HERO-DISK|PIPE-V': c_active_teleport,
-    
-    'HERO-SQUARE|TURNCOCK-H': c_turncock,
-    'HERO-TRIANGLE|TURNCOCK-H': c_turncock,
-    'HERO-DISK|TURNCOCK-H': c_turncock,
-    'HERO-SQUARE|TURNCOCK-V': c_turncock,
-    'HERO-TRIANGLE|TURNCOCK-V': c_turncock,
-    'HERO-DISK|TURNCOCK-V': c_turncock
-    */
+    'PARTICLE|HERO-SQUARE' : c_death,
+    'PARTICLE|HERO-TRIANGLE' : c_death,
+    'PARTICLE|HERO-DISK' : c_death,
+    'HERO-SQUARE|PARTICLE' : c_death,
+    'HERO-TRIANGLE|PARTICLE' : c_death,
+    'HERO-DISK|PARTICLE' : c_death,
+    'PARTICLE|*' : c_explode_active,
+    '*|PARTICLE' : c_explode_passive
 };
 
 var collision_for = function(active, passive) {
@@ -588,15 +585,15 @@ var collision_for = function(active, passive) {
 /// movement (including collisions). ///////////////////////////////////////////
 
 var move_thing = function(world, thing,x,y) {
+    x=mod(x,world['hp']); y=mod(y,world['vp']); /// Torus Topology
     if(thing==null) return(world); /// defensive...
     var obstacle = find_by_pos(world,x,y);
     if(obstacle == null) {
-	x=mod(x,world['hp']); y=mod(y,world['vp']); /// Torus Topology
 	thing.x = x;
 	thing.y = y;
 	world = update_thing(world, thing);
     } else {
-	//console.log(['col',thing,obstacle]);//dbg
+	console.log(['col',thing.type,obstacle.type]);//dbg
 	world = (collision_for(thing, obstacle))(world, thing,obstacle);
     }
     return(world);
@@ -620,7 +617,7 @@ var step_movable = function(world, thing) {
     return(world);
 };
 
-/*
+
 var step_gun = function(world, thing) {
     if(true || thing.on) { /// TMP
 	if(--thing.count<=0) {
@@ -630,13 +627,13 @@ var step_gun = function(world, thing) {
 	    var px=thing.x;//+dx;
 	    var py=thing.y;//+dy;
 	    world = insert_thing(world, mk_particle(px,py,dx,dy));
-	    world = notice(world, ['GUN SHOOTS',px,py]); //?
+	    //world = notice(world, ['GUN SHOOTS',px,py]); //?
 	}
 	world = update_thing(world, thing);
     }
     return(world);
 };
-*/
+
 
 var step_expires = function(world,thing) {
     if(thing.expires--<=0) {
@@ -654,17 +651,17 @@ var step_for = function(thing) {
     case 'FIRE':
 	return(step_expires);
 
-    case 'HERO-SQUARE': // ?!
-    case 'HERO-TRIANGLE': // ?!
-    case 'HERO-DISK': // ?!
-	/*
-    case 'CRYSTAL':
+    case 'HERO-SQUARE':
+    case 'HERO-TRIANGLE': 
+    case 'HERO-DISK': 
     case 'PARTICLE':
-    case 'ANT':
-    */
 	return(step_movable);
-//    case 'GUN': return(step_gun);
-    default : return(step_trivial);
+
+    case 'GUN':
+	return(step_gun);
+
+    default:
+	return(step_trivial);
     }
 };
 
