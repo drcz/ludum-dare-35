@@ -667,7 +667,7 @@ var do_fadeout_death = function() {
 };
 
 var do_fadeout_levelup = function() {
-    draw_board(the_world,null,'LEVEL COMPLETE.',_fadin_);
+    draw_board(the_world,null,'LEVEL COMPLETED.',_fadin_);
     hero = find_hero(the_world);
     switch(mod(_fadin_,4)) {
     case 0: hero.facing = 'right'; break;

@@ -146,7 +146,7 @@ var new_world_order = function(world) {
 
 /// log certain triplets, or whatever...
 var notice = function(world, fact) {
-    console.log(fact); // dbg !!
+    //console.log(fact); // dbg !!
     world.facts.push(fact);
     return(world);
 };
@@ -311,17 +311,12 @@ var c_push = function(world, active,passive) {
     if(active.dx != undefined) {
 	dx = active.dx; dy = active.dy; // way better.
     }
+    var pt = passive.type;
     var x = passive.x;
     var y = passive.y;
     world = move_thing(world, passive, x+dx,y+dy);
     var is_it_still_there = find_by_pos(world,x,y);
-    if(is_it_still_there==null) {
-	/*
-	active.x = x;
-	active.y = y;
-	active.facing = new_facing(active.facing, dx,dy);
-	world = update_thing(world, active);
-	*/
+    if(is_it_still_there==null || is_it_still_there.type!=pt) {
 	world = move_thing(world, active, x,y);
 	world = notice(world, ['PUSHED',active.type,passive.type]);
     } else {
@@ -593,7 +588,7 @@ var move_thing = function(world, thing,x,y) {
 	thing.y = y;
 	world = update_thing(world, thing);
     } else {
-	console.log(['col',thing.type,obstacle.type]);//dbg
+	//console.log(['col',thing.type,obstacle.type]);//dbg
 	world = (collision_for(thing, obstacle))(world, thing,obstacle);
     }
     return(world);
