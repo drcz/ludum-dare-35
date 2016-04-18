@@ -654,7 +654,7 @@ var do_fadeout_death = function() {
     case 2: hero.facing = 'left'; break;
     case 3: hero.facing = 'up2'; break;
     }
-    if(_fadin_-- <= 0) {
+    if(_fadin_-- < 0) {
 	if(--lives<=0) {
 	    GAME_STATE = 'GAME OVER';
 	}
@@ -687,8 +687,13 @@ var do_fadeout_levelup = function() {
 };
 
 var do_gameover = function() {
-    draw_board(the_world,null,'GAME OVER.',0);
+    draw_board(the_world,null,'GAME OVER.',-1);
     if(++_fadin_>= 33) {
+	_max_lives_ = 5; /// ??
+	lives = _max_lives_;
+	level = 0;
+	message = {'text':'', 'expires':0};
+	the_world = mk_world([],2,3);
 	GAME_STATE = 'TITLE';
     }
 };
