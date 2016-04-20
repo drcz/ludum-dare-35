@@ -8,7 +8,7 @@ Entry on LD: http://ludumdare.com/compo/ludum-dare-35/?action=preview&uid=88774
 
 Watch on vime: https://vine.co/u/1156316276340486144
 
-Play on chuj: http://chuj.co.nf/ld35/
+Play on gh-pages: http://drcz.github.io/ludum-dare-35/3Ro2CSiaMoT/
 
 Make sure you hear the sounds, they are crucial to the experience!
 As of flickering: no doubt it's annoying, but I just can't imagine a Flickering Torus that does not flicker... can you?
